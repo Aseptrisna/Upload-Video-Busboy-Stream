@@ -10,6 +10,7 @@ const path = require('path');
 const busboy = require('busboy');
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
+const multer = require("multer")
 
 
 const random = (() => {
@@ -17,16 +18,16 @@ const random = (() => {
   return () => randomFillSync(buf).toString('hex');
 })();
 
-const succes_response ={
-    code:200,
-    status:true,
-    message:"Berhasil Simpan Video" 
+const succes_response = {
+  code: 200,
+  status: true,
+  message: "Berhasil Simpan Video"
 }
 
-const error_response ={
-    code:200,
-    status:true,
-    message:"Gagal Simpan Video" 
+const error_response = {
+  code: 500,
+  status: false,
+  message: "Gagal Simpan Video"
 }
 
 app.use(express.static("static"));
@@ -38,10 +39,10 @@ app.use(bodyParser.json());
 
 app.use((req, res) => {
   if (req.method === 'POST') {
-    const bb = busboy({ headers: req.headers });
+    const bb = busboy({ headers: req.headers, highWaterMark: 100 * 1024 * 1024 });
     bb.on('file', (name, file, info) => {
-        const { filename, encoding, mimeType } = info;
-      const saveTo = path.join(process.env.FILE,filename );
+      const { filename, encoding, mimeType } = info;
+      const saveTo = path.join(process.env.FILE, filename);
       file.pipe(fs.createWriteStream(saveTo));
     });
     bb.on('close', () => {
@@ -54,5 +55,6 @@ app.use((req, res) => {
   res.writeHead(404);
   res.end(JSON.stringify(error_response));
 }).listen(process.env.PORT, () => {
-  console.log('Listening for requests:'+process.env.PORT);
+  console.log('Listening for requests:' + process.env.PORT);
 });
+
